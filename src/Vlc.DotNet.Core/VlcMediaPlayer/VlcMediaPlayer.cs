@@ -11,6 +11,7 @@ namespace Vlc.DotNet.Core
 {
     public sealed partial class VlcMediaPlayer : IDisposable
     {
+        private bool _resetOnEnd;
         private VlcMediaPlayerInstance myMediaPlayerInstance;
 
         public VlcMediaPlayer(DirectoryInfo vlcLibDirectory)
@@ -141,7 +142,7 @@ namespace Vlc.DotNet.Core
             return null;
         }
 
-        public void Play()
+        public void Play(bool resetOnEnd = true)
         {
             Manager.Play(myMediaPlayerInstance);
         }
