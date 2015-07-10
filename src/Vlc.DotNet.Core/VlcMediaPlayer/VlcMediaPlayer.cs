@@ -142,8 +142,14 @@ namespace Vlc.DotNet.Core
             return null;
         }
 
+        public void Play()
+        {
+            Play(true);
+        }
+
         public void Play(bool resetOnEnd = true)
         {
+            _resetOnEnd = resetOnEnd;
             Manager.Play(myMediaPlayerInstance);
         }
 
