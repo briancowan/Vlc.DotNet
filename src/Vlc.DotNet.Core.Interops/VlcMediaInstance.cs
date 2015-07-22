@@ -21,7 +21,9 @@ namespace Vlc.DotNet.Core.Interops
 
         public static implicit operator IntPtr(VlcMediaInstance instance)
         {
-            return instance.Pointer;
+            return instance != null
+                 ? instance.Pointer
+                 : IntPtr.Zero;
         }
     }
 }
