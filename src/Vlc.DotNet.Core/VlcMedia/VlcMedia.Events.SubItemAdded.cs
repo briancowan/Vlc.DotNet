@@ -12,8 +12,8 @@ namespace Vlc.DotNet.Core
 
         private void OnMediaSubItemAddedInternal(IntPtr ptr)
         {
-            var args = (VlcEventArg)Marshal.PtrToStructure(ptr, typeof(VlcEventArg));
-            OnMediaSubItemAdded(myVlcMediaPlayer.GetCreateMedia(args.MediaSubItemAdded.NewChild));
+            var args = (VlcEventArg) Marshal.PtrToStructure(ptr, typeof (VlcEventArg));
+            OnMediaSubItemAdded(new VlcMedia(myVlcMediaPlayer, new VlcMediaInstance(myVlcMediaPlayer.Manager, args.MediaSubItemAdded.NewChild)));
         }
 
         public void OnMediaSubItemAdded(VlcMedia newSubItemAdded)

@@ -10,6 +10,13 @@ namespace Vlc.DotNet.Core
     {
         private readonly VlcMediaPlayer myVlcMediaPlayer;
 
+        internal static Dictionary<VlcMediaPlayer, List<VlcMedia>> LoadedMedias { get; private set; }
+
+        static VlcMedia()
+        {
+            LoadedMedias = new Dictionary<VlcMediaPlayer, List<VlcMedia>>();
+        }
+
         internal VlcMedia(VlcMediaPlayer player, FileInfo file, params string[] options)
 #if NET20
             : this(player, VlcMediaInstanceExtensions.AddOptionToMedia(player.Manager.CreateNewMediaFromPath(file.FullName), player.Manager, options))
@@ -30,6 +37,9 @@ namespace Vlc.DotNet.Core
 
         internal VlcMedia(VlcMediaPlayer player, VlcMediaInstance mediaInstance)
         {
+            if(!LoadedMedias.ContainsKey(player))
+                LoadedMedias[player] = new List<VlcMedia>();
+            LoadedMedias[player].Add(this);
             MediaInstance = mediaInstance;
             myVlcMediaPlayer = player;
             RegisterEvents();
