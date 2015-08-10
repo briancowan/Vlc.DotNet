@@ -11,6 +11,7 @@ namespace Vlc.DotNet.Core
 {
     public sealed partial class VlcMediaPlayer : IDisposable
     {
+        private bool _resetOnEnd;
         private VlcMediaPlayerInstance myMediaPlayerInstance;
 
         private Guid mGuid = Guid.NewGuid();
@@ -162,8 +163,13 @@ namespace Vlc.DotNet.Core
 
         public void Play()
         {
-            if (myMediaPlayerInstance != IntPtr.Zero)
-                Manager.Play(myMediaPlayerInstance);
+            Play(true);
+        }
+
+        public void Play(bool resetOnEnd = true)
+        {
+            _resetOnEnd = resetOnEnd;
+            Manager.Play(myMediaPlayerInstance);
         }
 
         public void Pause()

@@ -10,7 +10,9 @@ namespace Vlc.DotNet.Core
 
         private void OnMediaPlayerEndReachedInternal(IntPtr ptr)
         {
-            ResetFromMedia();
+            if (_resetOnEnd)
+                ResetFromMedia();
+
             OnMediaPlayerEndReached();
         }
 

@@ -28,12 +28,15 @@ namespace Vlc.DotNet.Core.Interops
         {
             if (Pointer != IntPtr.Zero)
             {
-                // only release the instance if no more references
-                if (sInstanceCount[this.Pointer] > 0)
+                if (sInstanceCount.ContainsKey(this.Pointer))
                 {
-                    sInstanceCount[this.Pointer] = sInstanceCount[this.Pointer] - 1;
-                    if (sInstanceCount[this.Pointer] == 0)
-                        myManager.ReleaseMedia(this);
+                    // only release the instance if no more references
+                    if (sInstanceCount[this.Pointer] > 0)
+                    {
+                        sInstanceCount[this.Pointer] = sInstanceCount[this.Pointer] - 1;
+                        if (sInstanceCount[this.Pointer] == 0)
+                            myManager.ReleaseMedia(this);
+                    }
                 }
             }
             base.Dispose(disposing);
