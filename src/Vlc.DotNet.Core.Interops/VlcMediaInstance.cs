@@ -26,20 +26,24 @@ namespace Vlc.DotNet.Core.Interops
 
         protected override void Dispose(bool disposing)
         {
-            if (Pointer != IntPtr.Zero)
+            try
             {
-                if (sInstanceCount.ContainsKey(this.Pointer))
+                if (Pointer != IntPtr.Zero)
                 {
-                    // only release the instance if no more references
-                    if (sInstanceCount[this.Pointer] > 0)
+                    if (sInstanceCount.ContainsKey(this.Pointer))
                     {
-                        sInstanceCount[this.Pointer] = sInstanceCount[this.Pointer] - 1;
-                        if (sInstanceCount[this.Pointer] == 0)
-                            myManager.ReleaseMedia(this);
+                        // only release the instance if no more references
+                        if (sInstanceCount[this.Pointer] > 0)
+                        {
+                            sInstanceCount[this.Pointer] = sInstanceCount[this.Pointer] - 1;
+                            if (sInstanceCount[this.Pointer] == 0)
+                                myManager.ReleaseMedia(this);
+                        }
                     }
                 }
+                base.Dispose(disposing);
             }
-            base.Dispose(disposing);
+            catch { }
         }
 
         public static implicit operator IntPtr(VlcMediaInstance instance)
