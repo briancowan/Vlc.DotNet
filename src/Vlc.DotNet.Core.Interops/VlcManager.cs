@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Vlc.DotNet.Core.Interops.Signatures;
 
 namespace Vlc.DotNet.Core.Interops
@@ -9,6 +10,7 @@ namespace Vlc.DotNet.Core.Interops
     {
         private VlcInstance myVlcInstance;
         private static readonly Dictionary<DirectoryInfo, VlcManager> myAllInstance = new Dictionary<DirectoryInfo, VlcManager>();
+        private static object _lock = new object();
 
         public string VlcVersion
         {
@@ -32,22 +34,35 @@ namespace Vlc.DotNet.Core.Interops
             if (myVlcInstance != null)
                 myVlcInstance.Dispose();
 
-            if (myAllInstance.ContainsValue(this))
+            Monitor.TryEnter(_lock, 5000);
             {
-                foreach (var kv in new Dictionary<DirectoryInfo, VlcManager>(myAllInstance))
+                if (myAllInstance.ContainsValue(this))
                 {
-                    if(kv.Value == this)
-                        myAllInstance.Remove(kv.Key);
+                    foreach (var kv in new Dictionary<DirectoryInfo, VlcManager>(myAllInstance))
+                    {
+                        if (kv.Value == this)
+                            myAllInstance.Remove(kv.Key);
+                    }
                 }
             }
+            Monitor.Exit(_lock);
+
             base.Dispose(disposing);
         }
 
         public static VlcManager GetInstance(DirectoryInfo dynamicLinkLibrariesPath)
         {
-            if (!myAllInstance.ContainsKey(dynamicLinkLibrariesPath))
-                myAllInstance[dynamicLinkLibrariesPath] = new VlcManager(dynamicLinkLibrariesPath);
-            return myAllInstance[dynamicLinkLibrariesPath];
+            VlcManager manager = null;
+            Monitor.TryEnter(_lock, 5000);
+            {
+                if (!myAllInstance.ContainsKey(dynamicLinkLibrariesPath))
+                    myAllInstance[dynamicLinkLibrariesPath] = new VlcManager(dynamicLinkLibrariesPath);
+
+                manager = myAllInstance[dynamicLinkLibrariesPath];
+            }
+            Monitor.Exit(_lock);
+
+            return manager;
         }
     }
 }
