@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using Vlc.DotNet.Core.Interops.Signatures;
 
 namespace Vlc.DotNet.Core.Interops
@@ -7,20 +8,23 @@ namespace Vlc.DotNet.Core.Interops
     public sealed class VlcMediaInstance : InteropObjectInstance
     {
         private readonly VlcManager myManager;
-        static readonly Dictionary<IntPtr, int> sInstanceCount
-            = new Dictionary<IntPtr, int>();
+        static readonly Dictionary<IntPtr, int> sInstanceCount = new Dictionary<IntPtr, int>();
+        private static object _lock = new object();
 
         internal VlcMediaInstance(VlcManager manager, IntPtr pointer)
             : base(pointer)
         {
             myManager = manager;
-            if (pointer != IntPtr.Zero)
+            Monitor.TryEnter(_lock, 5000);
             {
-                // keep a reference count for the media instance
-                if (!sInstanceCount.ContainsKey(pointer))
-                    sInstanceCount[pointer] = 1;
-                else
-                    sInstanceCount[pointer] = sInstanceCount[pointer] + 1;
+                if (pointer != IntPtr.Zero)
+                {
+                    // keep a reference count for the media instance
+                    if (!sInstanceCount.ContainsKey(pointer))
+                        sInstanceCount[pointer] = 1;
+                    else
+                        sInstanceCount[pointer] = sInstanceCount[pointer] + 1;
+                }
             }
         }
 
@@ -30,14 +34,17 @@ namespace Vlc.DotNet.Core.Interops
             {
                 if (Pointer != IntPtr.Zero)
                 {
-                    if (sInstanceCount.ContainsKey(this.Pointer))
+                    Monitor.TryEnter(_lock, 5000);
                     {
-                        // only release the instance if no more references
-                        if (sInstanceCount[this.Pointer] > 0)
+                        if (sInstanceCount.ContainsKey(this.Pointer))
                         {
-                            sInstanceCount[this.Pointer] = sInstanceCount[this.Pointer] - 1;
-                            if (sInstanceCount[this.Pointer] == 0)
-                                myManager.ReleaseMedia(this);
+                            // only release the instance if no more references
+                            if (sInstanceCount[this.Pointer] > 0)
+                            {
+                                sInstanceCount[this.Pointer] = sInstanceCount[this.Pointer] - 1;
+                                if (sInstanceCount[this.Pointer] == 0)
+                                    myManager.ReleaseMedia(this);
+                            }
                         }
                     }
                 }
