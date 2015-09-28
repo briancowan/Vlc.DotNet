@@ -15,16 +15,28 @@ namespace Vlc.DotNet.Core.Interops
             : base(pointer)
         {
             myManager = manager;
-            Monitor.TryEnter(_lock, 5000);
+
+            try
             {
-                if (pointer != IntPtr.Zero)
+                Monitor.TryEnter(_lock, 5000);
                 {
-                    // keep a reference count for the media instance
-                    if (!sInstanceCount.ContainsKey(pointer))
-                        sInstanceCount[pointer] = 1;
-                    else
-                        sInstanceCount[pointer] = sInstanceCount[pointer] + 1;
+                    if (pointer != IntPtr.Zero)
+                    {
+                        // keep a reference count for the media instance
+                        if (!sInstanceCount.ContainsKey(pointer))
+                            sInstanceCount[pointer] = 1;
+                        else
+                            sInstanceCount[pointer] = sInstanceCount[pointer] + 1;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                Monitor.Exit(_lock);
             }
         }
 
@@ -50,7 +62,14 @@ namespace Vlc.DotNet.Core.Interops
                 }
                 base.Dispose(disposing);
             }
-            catch { }
+            catch ( Exception ex )
+            {
+                throw ex;
+            }
+            finally
+            {
+                Monitor.Exit(_lock);
+            }
         }
 
         public static implicit operator IntPtr(VlcMediaInstance instance)

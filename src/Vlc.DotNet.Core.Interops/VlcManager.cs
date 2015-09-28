@@ -34,18 +34,28 @@ namespace Vlc.DotNet.Core.Interops
             if (myVlcInstance != null)
                 myVlcInstance.Dispose();
 
-            Monitor.TryEnter(_lock, 5000);
+            try
             {
-                if (myAllInstance.ContainsValue(this))
+                Monitor.TryEnter(_lock, 5000);
                 {
-                    foreach (var kv in new Dictionary<DirectoryInfo, VlcManager>(myAllInstance))
+                    if (myAllInstance.ContainsValue(this))
                     {
-                        if (kv.Value == this)
-                            myAllInstance.Remove(kv.Key);
+                        foreach (var kv in new Dictionary<DirectoryInfo, VlcManager>(myAllInstance))
+                        {
+                            if (kv.Value == this)
+                                myAllInstance.Remove(kv.Key);
+                        }
                     }
                 }
             }
-            Monitor.Exit(_lock);
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                Monitor.Exit(_lock);
+            }
 
             base.Dispose(disposing);
         }
@@ -53,14 +63,24 @@ namespace Vlc.DotNet.Core.Interops
         public static VlcManager GetInstance(DirectoryInfo dynamicLinkLibrariesPath)
         {
             VlcManager manager = null;
-            Monitor.TryEnter(_lock, 5000);
+            try
             {
-                if (!myAllInstance.ContainsKey(dynamicLinkLibrariesPath))
-                    myAllInstance[dynamicLinkLibrariesPath] = new VlcManager(dynamicLinkLibrariesPath);
+                Monitor.TryEnter(_lock, 5000);
+                {
+                    if (!myAllInstance.ContainsKey(dynamicLinkLibrariesPath))
+                        myAllInstance[dynamicLinkLibrariesPath] = new VlcManager(dynamicLinkLibrariesPath);
 
-                manager = myAllInstance[dynamicLinkLibrariesPath];
+                    manager = myAllInstance[dynamicLinkLibrariesPath];
+                }
             }
-            Monitor.Exit(_lock);
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                Monitor.Exit(_lock);
+            }
 
             return manager;
         }
